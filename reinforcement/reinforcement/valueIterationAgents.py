@@ -197,6 +197,37 @@ class AsynchronousValueIterationAgent(ValueIterationAgent):
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
 
+        currIter = 0
+        currState=0
+        while currIter < self.iterations:
+            state=self.mdp.getStates()[currState]
+            if state != 'TERMINAL_STATE':
+
+                maxAction = float('-inf')
+                actionToTake = None
+                for action in self.mdp.getPossibleActions(state):
+
+                    sum = 0
+
+                    for transitionState in self.mdp.getTransitionStatesAndProbs(state, action):
+                        sPrimeState=transitionState[0]
+                        sum+= transitionState[1] * (self.mdp.getReward(state, action, sPrimeState) + self.discount * self.values[sPrimeState])
+                        #since there is no ordering on which state gos first, a state can be looking at a sprime state that already had its self.values updated this iteration
+
+                    if maxAction < sum:
+                        maxAction = sum
+                        actionToTake = action
+
+                if maxAction != float('-inf'):
+                    self.values[state] = maxAction
+                    self.actionDict[state] = actionToTake       
+
+            currState+=1
+            if currState == len(self.mdp.getStates()):
+                currState=0
+
+            currIter+=1
+
 class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
     """
         * Please read learningAgents.py before reading this.*
