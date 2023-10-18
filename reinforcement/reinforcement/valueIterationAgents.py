@@ -57,11 +57,54 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.discount = discount
         self.iterations = iterations
         self.values = util.Counter() # A Counter is a dict with default 0
+        self.actionDict = {}
         self.runValueIteration()
 
     def runValueIteration(self):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
+        #("RUNNING VALUE ITERATION")
+        #("Get States:",self.mdp.getStates())
+        #print("Possible Actions:", self.mdp.getPossibleActions((3,2)))
+        #print("Transtion States:", self.mdp.getTransitionStatesAndProbs((3,2), 'exit'))
+        #print("GetReward", self.mdp.getReward((3,2), 'exit', 'TERMINAL_STATE'))
+        #print("is terminal", self.mdp.isTerminal('TERMINAL_STATE'))
+
+        #print("Iterations:",self.iterations)
+        
+        k=0
+        while k < self.iterations:
+            #print(self.values)
+            kPlus1Dict = {}
+            for state in self.mdp.getStates():
+                
+                maxAction = float('-inf')
+                actionToTake = None
+                for action in self.mdp.getPossibleActions(state):
+
+                    sum = 0
+
+                    for transitionState in self.mdp.getTransitionStatesAndProbs(state, action):
+                        sPrimeState=transitionState[0]
+                        sum+= transitionState[1] * (self.mdp.getReward(state, action, sPrimeState) + self.discount * self.values[sPrimeState])
+                        #since there is no ordering on which state gos first, a state can be looking at a sprime state that already had its self.values updated this iteration
+
+                    if maxAction < sum:
+                        maxAction = sum
+                        actionToTake = action
+
+                if maxAction != float('-inf'):
+                    kPlus1Dict[state] = maxAction
+                    self.actionDict[state] = actionToTake
+
+            k+=1
+            for key in kPlus1Dict:
+
+                self.values[key] = kPlus1Dict[key]
+
+        #print("SELF>VALUES AT THE END OF RUN:",self.values) 
+        #print(self.actionDict)
+
 
 
     def getValue(self, state):
@@ -77,6 +120,18 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
+        
+        if action == 'exit':
+
+            return self.mdp.getReward(state, action, self.mdp.getTransitionStatesAndProbs(state,action)[0])
+        sum=0
+        #print("State", state, "action", action, self.mdp.getTransitionStatesAndProbs(state,action))
+        for tuple in self.mdp.getTransitionStatesAndProbs(state,action):
+
+            sum += tuple[1] * (self.mdp.getReward(state, action, tuple[0]) + self.discount*self.values[tuple[0]])
+        
+        return sum
+
         util.raiseNotDefined()
 
     def computeActionFromValues(self, state):
@@ -89,6 +144,17 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
+        #print(state)
+        if self.mdp.isTerminal(state):
+            #print("returning none")
+            return None
+
+        if state not in self.actionDict:
+            return None
+
+        return self.actionDict[state]
+
+
         util.raiseNotDefined()
 
     def getPolicy(self, state):
