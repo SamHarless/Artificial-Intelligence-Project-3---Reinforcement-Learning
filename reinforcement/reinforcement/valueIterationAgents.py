@@ -145,6 +145,29 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
         "*** YOUR CODE HERE ***"
         #print(state)
+        #print("BELLO INHERITANCE")
+
+        if self.mdp.isTerminal(state):
+            #print("returning none")
+            return None
+
+        maxQ = float('-inf')
+        actionToTake=None
+        for action in self.mdp.getPossibleActions(state):
+            
+            sum=0
+            for tuple in self.mdp.getTransitionStatesAndProbs(state, action):
+                sum += tuple[1] * (self.mdp.getReward(state, action, tuple[0])+self.discount*self.values[tuple[0]])
+            
+            if maxQ < sum:
+                maxQ = sum
+                actionToTake=action
+            
+        return actionToTake
+
+
+
+
         if self.mdp.isTerminal(state):
             #print("returning none")
             return None
@@ -244,7 +267,89 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
         """
         self.theta = theta
         ValueIterationAgent.__init__(self, mdp, discount, iterations)
+    
+    def valFinder(self, state):
+        maxQ = float('-inf')
+        for action in self.mdp.getPossibleActions(state):
+            
+            sum=0
+            for tuple in self.mdp.getTransitionStatesAndProbs(state, action):
+                sum += tuple[1] * (self.mdp.getReward(state, action, tuple[0])+self.discount*self.values[tuple[0]])
+            
+            maxQ = max(maxQ, sum)
+        
+        return maxQ
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
+        from util import PriorityQueue
+
+        #COMPUTE PREDECESSORS
+        predDict={} # state: [pred1, pred2, ....]
+        for state in self.mdp.getStates():
+            predDict[state] = []
+        #print(predDict)
+        for state in self.mdp.getStates():
+
+            for action in self.mdp.getPossibleActions(state):
+
+                for tuple in self.mdp.getTransitionStatesAndProbs(state, action):
+
+                    if tuple[1] > 0:
+
+                        if state not in predDict[tuple[0]]:
+                            predDict[tuple[0]].append(state)
+        PQ = PriorityQueue()
+
+        #FOR EACH NON TERMINAL STATE COMPUTE DIFF 
+        for state in self.mdp.getStates():
+
+            if state != 'TERMINAL_STATE':
+                #Find the absolute value of the difference between the current value of s in self.values and the highest Q-value across all possible actions from s (this represents what the value should be); call this number diff. Do NOT update self.values[s] in this step.
+
+                maxQ = float('-inf')
+                for action in self.mdp.getPossibleActions(state):
+                    
+                    sum=0
+                    for tuple in self.mdp.getTransitionStatesAndProbs(state, action):
+                        sum += tuple[1] * (self.mdp.getReward(state, action, tuple[0])+self.discount*self.values[tuple[0]])
+                    
+                    maxQ = max(maxQ, sum)
+                
+                diff = abs(self.values[state] - maxQ)
+
+                PQ.push(state, -diff)
+
+
+        #print(predDict)
+            
+
+
+        #ITERATE 
+
+        currIter = 0
+
+        while currIter < self.iterations:
+            
+            if PQ.isEmpty():
+                break
+
+            currState = PQ.pop()
+
+            #print(currState)
+
+            if currState == 'TERMINAL_STATE':
+                break
+            
+            self.values[currState]=self.valFinder(currState)
+
+            for pred in predDict[currState]:
+                
+                diff = abs(self.values[pred] - self.valFinder(pred))
+
+                if diff > self.theta: 
+                    PQ.update(pred, -diff)
+
+
+            currIter+=1
 
