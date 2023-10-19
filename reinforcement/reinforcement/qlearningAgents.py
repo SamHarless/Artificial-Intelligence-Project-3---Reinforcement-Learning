@@ -43,6 +43,7 @@ class QLearningAgent(ReinforcementAgent):
         ReinforcementAgent.__init__(self, **args)
 
         "*** YOUR CODE HERE ***"
+        self.q_valueDict = {}
 
     def getQValue(self, state, action):
         """
@@ -51,7 +52,7 @@ class QLearningAgent(ReinforcementAgent):
           or the Q node value otherwise
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.q_valueDict[str(state)][action] if str(state) in self.q_valueDict else 0.0
 
 
     def computeValueFromQValues(self, state):
@@ -62,7 +63,21 @@ class QLearningAgent(ReinforcementAgent):
           terminal state, you should return a value of 0.0.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if str(state) not in self.q_valueDict:
+            self.q_valueDict[str(state)] = {
+                'north': 0.0,
+                'south': 0.0,
+                'west': 0.0,
+                'east': 0.0,
+                'exit': 0.0
+        }
+        if not len(self.getLegalActions(state)):
+          return 0.0
+        else:
+          maxQ = float('-inf')
+          for qAction in self.q_valueDict[str(state)]:
+            maxQ = max(self.q_valueDict[str(state)][qAction], maxQ)
+        return maxQ
 
     def computeActionFromQValues(self, state):
         """
@@ -71,7 +86,16 @@ class QLearningAgent(ReinforcementAgent):
           you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if not len(self.getLegalActions(state)):
+          return None
+        else:
+          maxQ = float('-inf')
+          strTrack = ''
+          for qAction in self.q_valueDict[str(state)]:
+            if self.q_valueDict[str(state)][qAction] > maxQ:
+              maxQ = self.q_valueDict[str(state)][qAction]
+              strTrack = qAction
+        return strTrack
 
     def getAction(self, state):
         """
@@ -102,7 +126,19 @@ class QLearningAgent(ReinforcementAgent):
           it will be called on your behalf
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        if str(state) not in self.q_valueDict:
+            self.q_valueDict[str(state)] = {
+                'north': 0.0,
+                'south': 0.0,
+                'west': 0.0,
+                'east': 0.0,
+                'exit': 0.0
+        }
+        
+        maxQ = self.computeValueFromQValues(nextState)
+        sample = reward + self.discount * maxQ
+        self.q_valueDict[str(state)][action] = ((1 - self.alpha) * self.q_valueDict[str(state)][action]) + (self.alpha * sample)
 
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
