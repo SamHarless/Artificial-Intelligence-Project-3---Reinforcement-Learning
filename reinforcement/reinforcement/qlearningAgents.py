@@ -94,12 +94,15 @@ class QLearningAgent(ReinforcementAgent):
           return None
         else:
           maxQ = float('-inf')
-          strTrack = ''
+          strTrack = []
           for qAction in self.q_valueDict[state]:
-            if self.getQValue(state,qAction) > maxQ:
+            if self.getQValue(state,qAction) == maxQ:
+               strTrack.append(qAction)
+            elif self.getQValue(state,qAction) > maxQ:
+              strTrack = []
               maxQ = self.getQValue(state,qAction)
-              strTrack = qAction
-        return strTrack
+              strTrack.append(qAction)
+        return random.choice(strTrack)
 
     def getAction(self, state):
         """
