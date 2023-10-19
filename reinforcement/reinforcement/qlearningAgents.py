@@ -79,6 +79,7 @@ class QLearningAgent(ReinforcementAgent):
           return 0.0
         else:
           maxQ = float('-inf')
+          self.addToDict(state)
           for qAction in self.q_valueDict[state]:
             maxQ = max(self.getQValue(state, qAction), maxQ)
           return maxQ
@@ -95,6 +96,7 @@ class QLearningAgent(ReinforcementAgent):
         else:
           maxQ = float('-inf')
           strTrack = []
+          self.addToDict(state)
           for qAction in self.q_valueDict[state]:
             if self.getQValue(state,qAction) == maxQ:
                strTrack.append(qAction)
@@ -149,6 +151,14 @@ class QLearningAgent(ReinforcementAgent):
 
     def getValue(self, state):
         return self.computeValueFromQValues(state)
+    
+    def addToDict(self, state):
+      if state not in self.q_valueDict:
+        availableActions = self.getLegalActions(state)
+        self.q_valueDict[state] = {}
+        for action in availableActions:
+          self.q_valueDict[state][action] = 0.0
+         
 
 
 class PacmanQAgent(QLearningAgent):
