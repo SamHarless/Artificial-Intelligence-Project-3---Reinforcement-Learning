@@ -63,6 +63,8 @@ class QLearningAgent(ReinforcementAgent):
           terminal state, you should return a value of 0.0.
         """
         "*** YOUR CODE HERE ***"
+        if not len(self.getLegalActions(state)):
+          return 0.0
         if str(state) not in self.q_valueDict:
             self.q_valueDict[str(state)] = {
                 'north': 0.0,
@@ -71,8 +73,6 @@ class QLearningAgent(ReinforcementAgent):
                 'east': 0.0,
                 'exit': 0.0
         }
-        if not len(self.getLegalActions(state)):
-          return 0.0
         else:
           maxQ = float('-inf')
           for qAction in self.q_valueDict[str(state)]:
