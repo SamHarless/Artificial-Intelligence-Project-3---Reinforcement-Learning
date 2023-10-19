@@ -45,6 +45,18 @@ class QLearningAgent(ReinforcementAgent):
         "*** YOUR CODE HERE ***"
         self.q_valueDict = {}
 
+        for i in range(0,100):
+          for j in range(0,100):
+            try:
+              tempState = (i,j)
+              availableActions = self.getLegalActions(tempState)
+              self.q_valueDict[tempState] = {}
+              for action in availableActions:
+                self.q_valueDict[tempState][action] = 0.0
+            except:
+              continue
+             
+
     def getQValue(self, state, action):
         """
           Returns Q(state,action)
@@ -52,7 +64,7 @@ class QLearningAgent(ReinforcementAgent):
           or the Q node value otherwise
         """
         "*** YOUR CODE HERE ***"
-        return self.q_valueDict[str(state)][action] if str(state) in self.q_valueDict else 0.0
+        return self.q_valueDict[state][action] if state in self.q_valueDict else 0.0
 
 
     def computeValueFromQValues(self, state):
@@ -63,21 +75,12 @@ class QLearningAgent(ReinforcementAgent):
           terminal state, you should return a value of 0.0.
         """
         "*** YOUR CODE HERE ***"
-        if str(state) not in self.q_valueDict:
-            self.q_valueDict[str(state)] = {
-                'north': 0.0,
-                'south': 0.0,
-                'west': 0.0,
-                'east': 0.0,
-                'exit': 0.0
-                # REMOVE EXIT IT IS CAUSING ISSUE
-        }
         if not len(self.getLegalActions(state)):
           return 0.0
         else:
           maxQ = float('-inf')
-          for qAction in self.q_valueDict[str(state)]:
-            maxQ = max(self.q_valueDict[str(state)][qAction], maxQ)
+          for qAction in self.q_valueDict[state]:
+            maxQ = max(self.getQValue(state, qAction), maxQ)
           return maxQ
 
     def computeActionFromQValues(self, state):
@@ -92,9 +95,9 @@ class QLearningAgent(ReinforcementAgent):
         else:
           maxQ = float('-inf')
           strTrack = ''
-          for qAction in self.q_valueDict[str(state)]:
-            if self.q_valueDict[str(state)][qAction] > maxQ:
-              maxQ = self.q_valueDict[str(state)][qAction]
+          for qAction in self.q_valueDict[state]:
+            if self.getQValue(state,qAction) > maxQ:
+              maxQ = self.getQValue(state,qAction)
               strTrack = qAction
         return strTrack
 
@@ -127,28 +130,10 @@ class QLearningAgent(ReinforcementAgent):
           it will be called on your behalf
         """
         "*** YOUR CODE HERE ***"
-
-        if str(nextState) not in self.q_valueDict and len(self.getLegalActions(nextState)):
-            self.q_valueDict[str(nextState)] = {
-                'north': 0.0,
-                'south': 0.0,
-                'west': 0.0,
-                'east': 0.0,
-                'exit': 0.0
-        }
-
-        if str(state) not in self.q_valueDict:
-            self.q_valueDict[str(state)] = {
-                'north': 0.0,
-                'south': 0.0,
-                'west': 0.0,
-                'east': 0.0,
-                'exit': 0.0
-        }
         
         maxQ = self.computeValueFromQValues(nextState)
         sample = reward + self.discount * maxQ
-        self.q_valueDict[str(state)][action] = ((1 - self.alpha) * self.q_valueDict[str(state)][action]) + (self.alpha * sample)
+        self.q_valueDict[state][action] = ((1 - self.alpha) * self.q_valueDict[state][action]) + (self.alpha * sample)
 
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
