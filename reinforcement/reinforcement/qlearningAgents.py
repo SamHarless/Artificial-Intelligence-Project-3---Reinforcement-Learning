@@ -15,6 +15,7 @@
 from game import *
 from learningAgents import ReinforcementAgent
 from featureExtractors import *
+import numpy as np
 
 import random,util,math
 
@@ -215,14 +216,18 @@ class ApproximateQAgent(PacmanQAgent):
           where * is the dotProduct operator
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        feat = Counter(self.featExtractor.getFeatures(state,action).items())
+        return self.weights * feat
 
     def update(self, state, action, nextState, reward):
         """
            Should update your weights based on transition
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        maxQ = self.computeValueFromQValues(nextState)
+        diff = (reward + (self.discount* maxQ)) - self.getQValue(state, action)
+        diff_counter = Counter({key: value * diff * self.alpha for key, value in self.featExtractor.getFeatures(state,action).items()})
+        self.weights = util.Counter(self.weights) + diff_counter
 
     def final(self, state):
         "Called at the end of each game."
